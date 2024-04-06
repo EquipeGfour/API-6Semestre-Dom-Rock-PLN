@@ -5,7 +5,7 @@ from text_processing import process_text
 df = pd.read_excel('entrada.xlsx')
 
 # Escolha a coluna que deseja processar
-column_name = 'nome_da_coluna'
+column_name = 'Comentario'
 
 # Aplica a função process_text à coluna selecionada
 df[column_name] = df[column_name].apply(process_text)

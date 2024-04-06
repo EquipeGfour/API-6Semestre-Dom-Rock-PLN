@@ -10,7 +10,7 @@ def remove_accents(text):
 
 # Mapa de expansão de abreviações e contrações
 MAP = {
-    'LTDA': 'limitada',
+    'RCB': 'relação custo-benefício',
     'nda': 'nada',
     "d'água": 'de água' 
 }
