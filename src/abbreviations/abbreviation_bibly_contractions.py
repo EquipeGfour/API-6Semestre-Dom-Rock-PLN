@@ -49,6 +49,7 @@ processed_reviews = []
 for review in reviews:
     # Remover acentos
     review = remove_accents(review)
+    # review = remover_acentos(review)
     # Expandir contrações
     review = contractions.fix(review)
     # Remover caracteres especiais
