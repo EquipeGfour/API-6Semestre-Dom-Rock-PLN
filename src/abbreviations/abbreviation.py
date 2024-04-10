@@ -77,9 +77,9 @@ def remove_accents(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8', 'ignore')
     return text
 
-# Função para remover caracteres especiais
+# Função para remover caracteres especiais e números
 def remove_special_characters(token):
-    return re.sub(r'[^\w\s]', '', token)
+    return re.sub(r'[^A-Za-zÀ-ÖØ-öø-ÿ\s]', '', token)
 
 # Função para corrigir ortografia usando pyspellchecker
 def correct_spelling(word):
@@ -105,7 +105,7 @@ for review in reviews:
     review = contractions.fix(review)
     # Expandir siglas, abreviaturas e gírias
     review = expand_abbreviations(review)
-    # Remover caracteres especiais
+    # Remover caracteres especiais e números
     review = remove_special_characters(review)
     # Corrigir ortografia
     words = review.split()
