@@ -1,6 +1,7 @@
 from collections import Counter
-from typing import List
+from typing import List, Tuple
 from fastapi import HTTPException
+from datetime import datetime
 
 
 
@@ -63,13 +64,16 @@ class SpellChecker:
         return max(candidates, key=self.lexico_count.get)
 
 
-    def check_words(self, words: List[str]) -> List[str]:
+    def check_words(self, words: List[str]) -> Tuple[List[str], float]:
+        start = datetime.now()
         for word in words:
             if not word in self.lexico:
                 predict = self.correct(word)
                 if predict == word:
-                    print("não foi possivel corrigir a palavra")
-                    #raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
+                    raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
                 else:
                     word = predict
-        return words
+        end = datetime.now()
+        decorrido = end-start
+        exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
+        return words, exec_time

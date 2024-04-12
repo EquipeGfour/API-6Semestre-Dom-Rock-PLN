@@ -1,8 +1,8 @@
 from re import findall, compile
 from time import time
-from typing import List
+from typing import List, Tuple
 from unidecode import unidecode
-
+from datetime import datetime
 
 
 class Token:
@@ -12,10 +12,14 @@ class Token:
         self.lexico = lexico
 
 
-    def noise_remove(self, sentence: str):
+    def noise_remove(self, sentence: str) -> Tuple[str, float]:
+        start = datetime.now()
         sentence_lower = self.parse_to_lower(sentence)
         sentence_without_noise =self.accent_remover(sentence_lower)
-        return sentence_without_noise
+        end = datetime.now()
+        decorrido = end-start
+        exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
+        return sentence_without_noise, exec_time
 
 
     def accent_remover(self, texto):
@@ -29,11 +33,15 @@ class Token:
     def lemmatize_spacy(self, words):
         return [token.lemma_.lower() for word in words for token in self.stopwrods(word.lower())]
 
-    def tokenization_pipeline(self, sentence):
+    def tokenization_pipeline(self, sentence) -> Tuple[List[str], float]:
+        start = datetime.now()
         tokens = self.tokenization(sentence)
         tokens_lematizeded = self.lemmatize_spacy(tokens)
         tokens_ajusted = self.remove_repeated_characters(tokens_lematizeded)
-        return tokens_ajusted
+        end = datetime.now()
+        decorrido = end-start
+        exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
+        return tokens_ajusted, exec_time
 
 
     def tokenization(self, sentence: str) -> str:
@@ -41,11 +49,13 @@ class Token:
         return tokens
 
 
-    def remove_stopwords(self, words: list) -> list:
-        start = int(time())
+    def remove_stopwords(self, words: list) -> Tuple[List[str], float]:
+        start = datetime.now()
         words_without_stop_words = [word for word in words if not self.stopwrods.vocab[word].is_stop]
-        exec_time = int(time()) - start
-        return words_without_stop_words
+        end = datetime.now()
+        decorrido = end-start
+        exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
+        return words_without_stop_words, exec_time
 
 
     def remove_repeated_characters(self, tokens:list) -> List[str]:
