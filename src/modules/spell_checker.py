@@ -1,5 +1,6 @@
 from collections import Counter
 from typing import List
+from fastapi import HTTPException
 
 
 
@@ -69,6 +70,7 @@ class SpellChecker:
                 predict = self.correct(word)
                 if predict == word:
                     print("não foi possivel corrigir a palavra")
+                    raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
                 else:
                     word = predict
         return words

@@ -1,6 +1,5 @@
 from re import findall, compile
 from time import time
-from sqlalchemy.orm import Session
 from typing import List
 from unidecode import unidecode
 
@@ -13,26 +12,13 @@ class Token:
         self.lexico = lexico
 
 
-    # def initialize_pre_processing(self, doc_id:int , docs: List[dict], db: Session):
-    #     """
-    #     Steps:
-    #         - Remoção de ruidos
-    #         - Tokenização
-    #         - Remoção de stopwords
-    #         - Expansão de palavras
-    #         - Correção de palavras
-    #     """
-    #     for review in docs:
-    #         sentence = self.noise_remove(doc_id, review["review_text"], db)
-    #         sentences = self.tokenization_by_word(doc_id, sentence, db)
-    #         sentences = self.remove_stopwords(doc_id, sentences, db)
-    #         sentences = self.remove_repeated_characters(doc_id, sentences, db)
+    def lematization(self, word):
+        return [token.lemma_ for token in self.stopwrods(word)]
 
 
-    def noise_remove(self, doc_id:int, sentence: str, db: Session):
+    def noise_remove(self, doc_id:int, sentence: str):
         sentence_lower = self.parse_to_lower(sentence)
         sentence_without_noise =self.accent_remover(sentence_lower)
-        self._save_register(doc_id, sentence, sentence_without_noise, "Remoção de ruidos", 0, db)
         return sentence_without_noise
 
 
@@ -44,9 +30,8 @@ class Token:
         return sentence.lower()
 
 
-    def tokenization_by_word(self, doc_id:int, sentence: str, db: Session) -> dict:
+    def tokenization_by_word(self, doc_id:int, sentence: str) -> dict:
         tokens = self.tokenization(sentence)
-        self._save_register(doc_id, str(sentence), str(tokens), "Tokenização", 0, db)
         return tokens
 
 
@@ -55,19 +40,18 @@ class Token:
         return tokens
 
 
-    def remove_stopwords(self, doc_id:int, words: list, db: Session) -> list:
+    def remove_stopwords(self, doc_id:int, words: list) -> list:
         start = int(time())
         words_without_stop_words = [word for word in words if not self.stopwrods.vocab[word].is_stop]
         exec_time = int(time()) - start
-        self._save_register(doc_id, str(words), str(words_without_stop_words), "Remoção de stopwords", exec_time, db)
         return words_without_stop_words
 
 
-    def remove_repeated_characters(self, doc_id: int, tokens:list, db: Session) -> List[str]:
+    def remove_repeated_characters(self, doc_id: int, tokens:list) -> List[str]:
         corrected_words = []
         start = int(time())
         for token in tokens:
-            if token in self.nltk_tokens:
+            if token in self.lexico:
                 corrected_words.append(token)
                 continue
             while True:
@@ -77,11 +61,10 @@ class Token:
                     break
                 token = new_token
         exec_time = int(time()) - start
-        self._save_register(doc_id, str(tokens), str(corrected_words), "Remoção de caracters repetidos", exec_time, db)
         return corrected_words
 
 
-    # def _save_register(self, doc_id:int, input_value:str, output:str, step:str, processing_time:int, db: Session):
+    # def _save_register(self, doc_id:int, input_value:str, output:str, step:str, processing_time:int):
     #     obj = PreprocessingInput(
     #         input=input_value, 
     #         output=output, 

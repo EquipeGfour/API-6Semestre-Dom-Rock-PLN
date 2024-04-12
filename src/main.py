@@ -3,6 +3,7 @@ from uvicorn import run
 from utils.config import Config
 from models.base import Base
 from db.db import engine
+from routes import preprocessing_router
 
 
 config = Config()
@@ -18,6 +19,8 @@ def create_tables():
 @app.get("/", description="Rota default da aplicação")
 def read_root():
     return "is running..."
+
+app.include_router(preprocessing_router, prefix="/preprocessing", tags=["preprocessing"])
 
 
 if __name__ == "__main__":

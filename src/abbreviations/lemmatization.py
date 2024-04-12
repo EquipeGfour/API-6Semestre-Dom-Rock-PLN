@@ -19,11 +19,11 @@ dataset_types = {
     "reviewer_state": str
 }
 
-dataset = read_csv("B2W-Reviews01.csv", delimiter=",", dtype=dataset_types)
-train_data = dataset[-100:].dropna()
-reviews = train_data["review_text"].tolist()
+# dataset = read_csv("B2W-Reviews01.csv", delimiter=",", dtype=dataset_types)
+# train_data = dataset[-100:].dropna()
+# reviews = train_data["review_text"].tolist()
 
-# Inicializando o modelo Spacy
+# # Inicializando o modelo Spacy
 spacy_nlp = spacy.load('pt_core_news_sm', disable=['parser', 'ner'])
 
 # Função para lematizar um texto usando Spacy
@@ -31,7 +31,7 @@ def lemmatize_spacy(text):
     return [token.lemma_ for token in spacy_nlp(text)]
 
 # Lematizar as avaliações usando Spacy
-lemmatized_reviews_spacy = [lemmatize_spacy(review) for review in reviews]
+lemmatized_reviews_spacy = [lemmatize_spacy(review) for review in ["Estou contente com a compra entrega rápida o único problema com as Americanas é se houBer troca ou devolução do proUDto o consumidor tem problemas com espera."]]
 
 # Exemplo de saída
 print("Texto lemmatizado:")
