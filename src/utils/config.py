@@ -1,4 +1,7 @@
 from configparser import ConfigParser
+from os import getcwd
+
+
 
 DEFAULT_FILE_NAME= "config.ini"
 
@@ -14,6 +17,7 @@ class Config():
 
 
     def _init_config_parser(self) -> ConfigParser:
+        path = getcwd().replace("src","") + "\\" + self._file
         config = ConfigParser()
-        config.read(self._file)
+        config.read(path)
         return config

@@ -1,0 +1,11 @@
+spacy
+pandas
+unicodedata
+spellchecker
+contractions
+pycountry
+text_processing
+nltk
+fastapi
+uvicorn
+unidecode

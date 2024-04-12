@@ -1,25 +1,25 @@
-from pandas         import read_csv
-
-dataset_types = {
-    "submission_date": str,
-    "reviewer_id":str,
-    "product_id": str,
-    "product_name": str,
-    "product_brand": str,
-    "site_category_lv1":str,
-    "site_category_lv2":str, 
-    "review_title": str,
-    "overall_rating": int,
-    "recommend_to_a_friend": str,
-    "review_text": str,
-    "reviewer_birth_year": float,
-    "reviewer_gender": str,
-    "reviewer_state": str
-}
-
-dataset = read_csv("B2W-Reviews01.csv", delimiter=",", dtype=dataset_types)
-train_data = dataset[-100:].dropna()
-reviews = train_data["review_text"].to_list()
+from fastapi import FastAPI
+from uvicorn import run
+from utils.config import Config
+from models.base import Base
+from db.db import engine
 
 
-print(reviews)
+config = Config()
+
+project_name = config._g.get("application", "project_name",fallback='service-pln')
+project_version = config._g.get("application", "project_version",fallback='0.0.0')
+
+app = FastAPI(title=project_name, version=project_version)
+
+def create_tables():
+    Base.metadata.create_all(bind=engine)
+
+@app.get("/", description="Rota default da aplicação")
+def read_root():
+    return "is running..."
+
+
+if __name__ == "__main__":
+    port = int(config._g.get("application", "port", fallback=8001))
+    run("main:app", host="0.0.0.0", port= port, log_level="debug", reload=True)
