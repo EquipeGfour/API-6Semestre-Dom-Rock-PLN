@@ -12,11 +12,7 @@ class Token:
         self.lexico = lexico
 
 
-    def lematization(self, word):
-        return [token.lemma_ for token in self.stopwrods(word)]
-
-
-    def noise_remove(self, doc_id:int, sentence: str):
+    def noise_remove(self, sentence: str):
         sentence_lower = self.parse_to_lower(sentence)
         sentence_without_noise =self.accent_remover(sentence_lower)
         return sentence_without_noise
@@ -30,9 +26,14 @@ class Token:
         return sentence.lower()
 
 
-    def tokenization_by_word(self, doc_id:int, sentence: str) -> dict:
+    def lemmatize_spacy(self, words):
+        return [token.lemma_.lower() for word in words for token in self.stopwrods(word.lower())]
+
+    def tokenization_pipeline(self, sentence):
         tokens = self.tokenization(sentence)
-        return tokens
+        tokens_lematizeded = self.lemmatize_spacy(tokens)
+        tokens_ajusted = self.remove_repeated_characters(tokens_lematizeded)
+        return tokens_ajusted
 
 
     def tokenization(self, sentence: str) -> str:
@@ -40,14 +41,14 @@ class Token:
         return tokens
 
 
-    def remove_stopwords(self, doc_id:int, words: list) -> list:
+    def remove_stopwords(self, words: list) -> list:
         start = int(time())
         words_without_stop_words = [word for word in words if not self.stopwrods.vocab[word].is_stop]
         exec_time = int(time()) - start
         return words_without_stop_words
 
 
-    def remove_repeated_characters(self, doc_id: int, tokens:list) -> List[str]:
+    def remove_repeated_characters(self, tokens:list) -> List[str]:
         corrected_words = []
         start = int(time())
         for token in tokens:
@@ -64,16 +65,3 @@ class Token:
         return corrected_words
 
 
-    # def _save_register(self, doc_id:int, input_value:str, output:str, step:str, processing_time:int):
-    #     obj = PreprocessingInput(
-    #         input=input_value, 
-    #         output=output, 
-    #         step=step, 
-    #         processing_time= processing_time, 
-    #         doc_id=doc_id)
-    #     ret = PreProcessing().insert_register(
-    #         doc_id=doc_id, 
-    #         preprocessing_data=obj,
-    #         db=db
-    #     )
-    #     print(ret)

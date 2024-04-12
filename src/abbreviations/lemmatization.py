@@ -27,12 +27,12 @@ dataset_types = {
 spacy_nlp = spacy.load('pt_core_news_sm', disable=['parser', 'ner'])
 
 # Função para lematizar um texto usando Spacy
-def lemmatize_spacy(text):
-    return [token.lemma_ for token in spacy_nlp(text)]
+def lemmatize_spacy(words):
+    return [token.lemma_ for word in words for token in spacy_nlp(word)]
 
 # Lematizar as avaliações usando Spacy
-lemmatized_reviews_spacy = [lemmatize_spacy(review) for review in ["Estou contente com a compra entrega rápida o único problema com as Americanas é se houBer troca ou devolução do proUDto o consumidor tem problemas com espera."]]
+# lemmatized_reviews_spacy = [lemmatize_spacy(review) for review in ["Estou contente com a compra entrega rápida o único problema com as Americanas é se houBer troca ou devolução do proUDto o consumidor tem problemas com espera."]]
 
 # Exemplo de saída
 print("Texto lemmatizado:")
-print(lemmatized_reviews_spacy[0])
+print(lemmatize_spacy(["amigos", "correndo", "pulando", "rápido"]))

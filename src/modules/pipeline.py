@@ -58,23 +58,17 @@ class Pipeline:
             train_data = train_data[["reviewer_id", "review_text"]]
             train_data = train_data.dropna()
             train_data = train_data.to_dict(orient='records')
-            print("PEGUEI A BASE DE DADOS")
             for review in train_data:
-                print(review)
-                sentence = self.token.noise_remove(doc_id, review["review_text"])
-                print("REMOVI OS RUIDOS")
+                sentence = self.token.noise_remove(review["review_text"])
                 self._preprocessing.insert_register(doc_id=doc_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": review["review_text"], "output": sentence, "step": "Remoção de ruidos", "time": 0, "error":""})
-                tokens = self.token.tokenization_by_word(doc_id, sentence)
+                tokens = self.token.tokenization_pipeline(sentence)
                 self._preprocessing.insert_register(doc_id=doc_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": sentence, "output": str(tokens), "step": "Tokenização", "time": 0, "error":""})
-                tokens_without_stopwords = self.token.remove_stopwords(doc_id, tokens)
+                tokens_without_stopwords = self.token.remove_stopwords(tokens)
                 self._preprocessing.insert_register(doc_id=doc_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": str(tokens), "output": str(tokens_without_stopwords), "step": "Remoção de stopwords", "time": 0, "error":""})
-                ret = self.token.remove_repeated_characters(doc_id, tokens_without_stopwords)
-                self._preprocessing.insert_register(doc_id=doc_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": str(tokens_without_stopwords), "output": str(ret), "step": "remove_repeated_characters", "time": 0, "error":""})
-                tokens_corrected = self.spell_checker.check_words(ret)
-                self._preprocessing.insert_register(doc_id=doc_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": str(ret), "output": str(tokens_corrected), "step": "Correção de palavras", "time": 0, "error":""})
-            return "deu bão"
+                tokens_corrected = self.spell_checker.check_words(tokens_without_stopwords)
+                self._preprocessing.insert_register(doc_id=doc_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": str(tokens_without_stopwords), "output": str(tokens_corrected), "step": "Correção de palavras", "time": 0, "error":""})
+            return "The pipeline was executed successfully"
         except Exception as e:
-            print("ERRO NA PIPELINE: ", e)
             raise HTTPException(status_code=500, detail=str(e))
 
     # def calc_execution_time(self, doc_id, func, *args, **kwargs):

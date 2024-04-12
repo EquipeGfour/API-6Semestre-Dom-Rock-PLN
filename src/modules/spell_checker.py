@@ -60,7 +60,6 @@ class SpellChecker:
         candidates = (self.known(self.edits0(word)) or 
                     self.known(self.edits1(word)) or                   
                     [word])
-        print("candidatos: {}".format(candidates))
         return max(candidates, key=self.lexico_count.get)
 
 
@@ -70,7 +69,7 @@ class SpellChecker:
                 predict = self.correct(word)
                 if predict == word:
                     print("não foi possivel corrigir a palavra")
-                    raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
+                    #raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
                 else:
                     word = predict
         return words

@@ -4,6 +4,7 @@ from models.docs import Docs
 from models.preprocessing import Preprocessing
 
 
+
 class PreProcessing:
     def __init__(self) -> None:
         self._db = SessionLocal()
@@ -25,8 +26,7 @@ class PreProcessing:
             self._db.add(new_preprocessing)
             self._db.commit()
         except Exception as e:
-            print("ERRO NO BANCO: ", e)
-        #return {"message": "Preprocessing data inserted successfully"} 
+            raise HTTPException(status_code=500, detail=str(e))
 
 
 
