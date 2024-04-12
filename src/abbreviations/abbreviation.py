@@ -1,70 +1,117 @@
-from spellchecker import SpellChecker
+from pandas import read_csv
 import unicodedata
 import re
-import sys
+from spellchecker import SpellChecker
+import contractions
+
+# Dicionário de expansão de siglas, abreviaturas e gírias
+expansions = {
+    "obs": "observacao",
+    "obg": "obrigado",
+    "blz": "beleza",
+    "mto": "muito",
+    "mta": "muita",
+    "mt": "muito",
+    "mts": "muitos",
+    "vc": "voce",
+    "vcs": "voces",
+    "tv": "televisao",
+    "tvs": "televisoes",
+    "pq": "porque",
+    "oq": "o que",
+    "qd": "quando",
+    "q": "que",
+    "ñ": "nao",
+    "td": "tudo",
+    "tds": "tudos",
+    "tb": "tambem",
+    "tbm": "tambem",
+    "etc": "e outras coisas",
+    "hj": "hoje",
+    "app": "aplicativo",
+    "SAC": "servico de Atendimento ao Consumidor",
+    "LTDA": "limitada",
+    "qdo": "quando",
+    "msm": "mesmo",
+    "net": "internet",
+    "min": "minuto",
+    "cel": "celular",
+    "cell": "celular",
+    "qto": "quanto",
+    "qq": "qualquer",
+    "not": "notebook",
+    "hrs": "horas",
+    "hr": "horas",
+    "msg": "mensagem",
+    "agr": "agora",
+    "tdo": "tudo",
+    "ngm": "ninguem",
+    "vdd": "verdade",
+    "vlw": "valeu"
+}
+
+# Carregando o conjunto de dados
+dataset_types = {
+    "submission_date": str,
+    "reviewer_id":str,
+    "product_id": str,
+    "product_name": str,
+    "product_brand": str,
+    "site_category_lv1":str,
+    "site_category_lv2":str, 
+    "review_title": str,
+    "overall_rating": int,
+    "recommend_to_a_friend": str,
+    "review_text": str,
+    "reviewer_birth_year": float,
+    "reviewer_gender": str,
+    "reviewer_state": str
+}
+
+dataset = read_csv("B2W-Reviews01.csv", delimiter=",", dtype=dataset_types)
+train_data = dataset[-100:].dropna()
+reviews = train_data["review_text"].tolist()
 
 # Função para remover acentos
 def remove_accents(text):
     text = unicodedata.normalize('NFKD', text).encode('ascii', 'ignore').decode('utf-8', 'ignore')
     return text
 
-
-# Mapeamento de contrações e abreviações
-MAP = {
-    'LTDA': 'limitada',
-    'nda': 'nada',
-    'mto':'muito',
-    'vc': 'voce',
-    'tv': 'televisao',
-}
-
-# Função para expandir contrações e abreviações
-def expand_abbreviations_and_contractions(text, contraction_mapping):
-    for key, value in contraction_mapping.items():
-        text = re.sub(r'\b' + re.escape(key) + r'\b', value, text)
-    return text
-
-# Função para expandir casos especiais
-def expand_special_cases(text):
-    return text.replace("d'agua", "de agua")
-
-# Função para remover caracteres especiais
-def remove_special_characters(token):
-    return re.sub(r'[^\w\s]', '', token)
+# Função para remover palavras seguidas de números e números seguidos de palavras
+def remove_words_with_numbers(token):
+    return re.sub(r'\b(?:\w*\d\w*|\d\w*\d)\b', '', token)
 
 # Função para corrigir ortografia usando pyspellchecker
 def correct_spelling(word):
     spell = SpellChecker(language='pt')
-    # Verifique se a palavra está correta
     corrected_word = spell.correction(word)
     if corrected_word != word:
-        # Se a palavra foi corrigida, retorne a correção
         return corrected_word
     else:
-        # Se a palavra estava correta ou não pôde ser corrigida, retorne a palavra original
         return word
 
-# Texto de exemplo
-sample_text = ("produto mto bom, com essa garrafinha vc pode até servir água pro megazord"
-               " To pensando em vender minha tv pra comprar 1 garrafa dessa. RECOMENDO")
+# Função para expandir siglas, abreviaturas e gírias
+def expand_abbreviations(text):
+    words = text.split()
+    expanded_words = [expansions[word] if word in expansions else word for word in words]
+    return ' '.join(expanded_words)
 
-# Corrigindo a palavra 'friiio' no texto original
-sample_text_corrected = sample_text.replace("friiio", "frios")
+# Processamento do texto das reviews
+processed_reviews = []
+for review in reviews:
+    # Remover acentos
+    review = remove_accents(review)
+    # Expandir contrações
+    review = contractions.fix(review)
+    # Expandir siglas, abreviaturas e gírias
+    review = expand_abbreviations(review)
+    # Remover palavras seguidas de números e números seguidos de palavras
+    review = remove_words_with_numbers(review)
+    # Corrigir ortografia
+    words = review.split()
+    corrected_review = ' '.join(correct_spelling(word) or word for word in words if word.strip())
+    processed_reviews.append(corrected_review)
 
-sample_text_wo_accents = remove_accents(sample_text_corrected)
-sample_text_wo_abbr_and_contr = expand_abbreviations_and_contractions(sample_text_wo_accents, MAP)
-sample_text_wo_special_cases = expand_special_cases(sample_text_wo_abbr_and_contr)
-
-# Aplicando correção ortográfica no texto
-words = sample_text_wo_special_cases.split()
-corrected_text = ' '.join(correct_spelling(word) or word for word in words if word.strip())
-
-# Exibindo o texto corrigido
-print("Texto corrigido:")
-sys.stdout.buffer.write(corrected_text.encode('utf-8'))
-print()
-
-# Corrigindo palavra específica
-word = "friiio"
-corrected_word = correct_spelling(word) or word
-print("Palavra corrigida:", corrected_word)
+# Exibindo as reviews processadas
+for review in processed_reviews:
+    print(review)
