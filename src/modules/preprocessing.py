@@ -30,9 +30,9 @@ class PreProcessing:
 
 
 
-    # def get_register(self, doc_id: int, db: Session):
-    #     doc = db.query(Docs).filter(Docs.id == doc_id).first()
-    #     preprocessings = db.query(Preprocessing).filter(Preprocessing.doc_id == doc_id).all()
-    #     if doc is None:
-    #         raise HTTPException(status_code=404, detail="Document not found")
-    #     return preprocessings
+    def get_register(self, doc_id: int):
+        doc = self._db.query(Docs).filter(Docs.id == doc_id).first()
+        preprocessings = self._db.query(Preprocessing).filter(Preprocessing.doc_id == doc_id).all()
+        if doc is None:
+            raise HTTPException(status_code=404, detail="Document not found")
+        return preprocessings
