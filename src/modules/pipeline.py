@@ -101,6 +101,7 @@ class Pipeline:
                 self._preprocessing.insert_register(doc_id=doc_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": str(tokens_without_stopwords), "output": str(tokens_corrected), "step": "Correção de palavras", "time": exec_time, "error":""})
             return "The pipeline was executed successfully"
         except Exception as e:
+            print(e)
             raise HTTPException(status_code=500, detail=str(e))
 
 

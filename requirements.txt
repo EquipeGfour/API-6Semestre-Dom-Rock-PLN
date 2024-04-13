@@ -1,6 +1,5 @@
 spacy
 pandas
-unicodedata
 spellchecker
 contractions
 pycountry

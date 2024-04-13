@@ -71,7 +71,7 @@ class SpellChecker:
                 predict = self.correct(word)
                 if predict == word:
                     print(f"não foi possivel corrigir a palavra: {word}")
-                    raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
+                    # raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
                 else:
                     word = predict
         end = datetime.now()

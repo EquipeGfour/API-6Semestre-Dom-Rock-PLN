@@ -10,6 +10,7 @@ class PreProcessing:
         self._db = SessionLocal()
 
     def insert_register(self, doc_id: int, preprocessing_dict: dict ):
+        self._db = SessionLocal()
         try:
             doc = self._db.query(Docs).filter(Docs.id == doc_id).first()
             if doc is None:
@@ -31,6 +32,7 @@ class PreProcessing:
 
 
     def get_register(self, doc_id: int):
+        self._db = SessionLocal()
         doc = self._db.query(Docs).filter(Docs.id == doc_id).first()
         preprocessings = self._db.query(Preprocessing).filter(Preprocessing.doc_id == doc_id).all()
         if doc is None:
