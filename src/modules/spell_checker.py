@@ -66,6 +66,7 @@ class SpellChecker:
 
     def check_words(self, words: List[str]) -> Tuple[List[str], float]:
         start = datetime.now()
+        corrected_words = []
         for word in words:
             if not word in self.lexico:
                 predict = self.correct(word)
@@ -74,7 +75,8 @@ class SpellChecker:
                     # raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
                 else:
                     word = predict
+            corrected_words.append(word)        
         end = datetime.now()
         decorrido = end-start
         exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
-        return words, exec_time
+        return corrected_words, exec_time
