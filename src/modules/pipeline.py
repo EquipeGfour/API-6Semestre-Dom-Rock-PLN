@@ -8,14 +8,14 @@ from fastapi import HTTPException
 from pandas import read_csv
 from re import compile
 from datetime import datetime
-from modules.doc import Doc
+from modules.datasets import DatasetsController
 
 
 
 class Pipeline:
     def __init__(self) -> None:
         self._preprocessing = PreProcessing()
-        self._document = Doc()
+        self._document = DatasetsController()
         self._inicialization_attributes()
         self.token = Token(self.stopwrods, self.nltk_tokens)
         self.spell_checker = SpellChecker(self.nltk_tokens)
@@ -85,7 +85,7 @@ class Pipeline:
                 - Correção de palavras
             """
 
-            doc = self._document.get_doc_id(doc_id)
+            doc = self._document.get_dataset_id(doc_id)
             reviews = self.get_reviews_by_csv(doc.link)
 
             for review in reviews:

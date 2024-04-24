@@ -1,7 +1,7 @@
 from db.db import SessionLocal
 from fastapi import HTTPException
-from models.docs import Docs
-from models.preprocessing import Preprocessing
+from models.datasets import Datasets
+from models.preprocessing_historics import PreprocessingHistorics
 
 
 
@@ -12,10 +12,10 @@ class PreProcessing:
     def insert_register(self, doc_id: int, preprocessing_dict: dict ):
         self._db = SessionLocal()
         try:
-            doc = self._db.query(Docs).filter(Docs.id == doc_id).first()
+            doc = self._db.query(Datasets).filter(Datasets.id == doc_id).first()
             if doc is None:
                 raise HTTPException(status_code=404, detail="Document not found")
-            new_preprocessing = Preprocessing(
+            new_preprocessing = PreprocessingHistorics(
                 input=preprocessing_dict["input"],
                 output=preprocessing_dict["output"],
                 step=preprocessing_dict["step"],
@@ -33,8 +33,8 @@ class PreProcessing:
 
     def get_register(self, doc_id: int):
         self._db = SessionLocal()
-        doc = self._db.query(Docs).filter(Docs.id == doc_id).first()
-        preprocessings = self._db.query(Preprocessing).filter(Preprocessing.doc_id == doc_id).all()
+        doc = self._db.query(Datasets).filter(Datasets.id == doc_id).first()
+        preprocessings = self._db.query(PreprocessingHistorics).filter(PreprocessingHistorics.doc_id == doc_id).all()
         if doc is None:
             raise HTTPException(status_code=404, detail="Document not found")
         return preprocessings
