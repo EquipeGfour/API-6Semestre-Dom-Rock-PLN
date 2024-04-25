@@ -9,20 +9,19 @@ class PreProcessing:
     def __init__(self) -> None:
         self._db = SessionLocal()
 
-    def insert_register(self, doc_id: int, preprocessing_dict: dict ):
+    def insert_register(self, dataset_id: int, preprocessing_dict: dict ):
         self._db = SessionLocal()
         try:
-            doc = self._db.query(Datasets).filter(Datasets.id == doc_id).first()
-            if doc is None:
+            dataset = self._db.query(Datasets).filter(Datasets.id == dataset_id).first()
+            if dataset is None:
                 raise HTTPException(status_code=404, detail="Document not found")
             new_preprocessing = PreprocessingHistorics(
                 input=preprocessing_dict["input"],
                 output=preprocessing_dict["output"],
                 step=preprocessing_dict["step"],
-                doc_id=doc_id,
+                dataset_id=dataset_id,
                 processing_time=preprocessing_dict["time"],
-                review_id=preprocessing_dict["review_id"],
-                error=preprocessing_dict["error"]
+                #review_id=preprocessing_dict["review_id"],
             )
             self._db.add(new_preprocessing)
             self._db.commit()
@@ -31,10 +30,10 @@ class PreProcessing:
 
 
 
-    def get_register(self, doc_id: int):
+    def get_register(self, dataset_id: int):
         self._db = SessionLocal()
-        doc = self._db.query(Datasets).filter(Datasets.id == doc_id).first()
-        preprocessings = self._db.query(PreprocessingHistorics).filter(PreprocessingHistorics.doc_id == doc_id).all()
+        doc = self._db.query(Datasets).filter(Datasets.id == dataset_id).first()
+        preprocessings = self._db.query(PreprocessingHistorics).filter(PreprocessingHistorics.dataset_id == dataset_id).all()
         if doc is None:
             raise HTTPException(status_code=404, detail="Document not found")
         return preprocessings
