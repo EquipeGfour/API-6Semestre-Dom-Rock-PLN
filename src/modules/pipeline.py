@@ -13,6 +13,8 @@ from typing import Union
 from modules.products import ProductsController
 from modules.categories import CategoriesController
 from modules.subcategories import SubCategoriesController
+from modules.reviewers import ReviewerController
+from schemas.schemas import ReviewerInput
 
 
 
@@ -23,6 +25,7 @@ class Pipeline:
         self._products = ProductsController()
         self._categories = CategoriesController()
         self._subcategories = SubCategoriesController()
+        self._reviewers = ReviewerController()
         self._inicialization_attributes()
         self.token = Token(self.stopwrods, self.nltk_tokens)
         self.spell_checker = SpellChecker(self.nltk_tokens)
@@ -100,6 +103,7 @@ class Pipeline:
                 category = review["site_category_lv1"]
                 subcategory = (review["site_category_lv2"] or None)
                 product = self.save_review_product(product_obj, category, subcategory)
+                reviewer = self.save_reviewer(review)
                 sentence, exec_time = self.token.noise_remove(review["review_text"])
                 self._preprocessing.insert_register(dataset_id=dataset_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": review["review_text"], "output": sentence, "step": "Remoção de ruidos", "time": exec_time, "error":""})
                 tokens, exec_time = self.token.tokenization_pipeline(sentence)
@@ -143,7 +147,7 @@ class Pipeline:
                 "reviewer_state": str
             }
         dataset = read_csv(path, delimiter=",", dtype=dataset_types)
-        train_data = dataset[["reviewer_id", "review_text", "product_id", "product_name", "product_brand", "site_category_lv1", "site_category_lv2"]]
+        train_data = dataset[["reviewer_id", "review_text", "product_id", "product_name", "product_brand", "site_category_lv1", "site_category_lv2", "reviewer_state", "reviewer_gender", "reviewer_birth_year"]]
         train_data = train_data.dropna()
         train_data = train_data.to_dict(orient='records')
         return train_data
@@ -155,6 +159,12 @@ class Pipeline:
             self._subcategories.create_subcategory(subcategory_name, category.id)
         product = self._products.create_product(product_obj["name"], product_obj["id"], product_obj["brand"], category.id)
         return product
+    
+
+    def save_reviewer(self, review: dict):
+        reviewer_obj = ReviewerInput(reviewer_id=review["reviewer_id"], birth_year=review["reviewer_birth_year"], gender=review["reviewer_gender"], state=review["reviewer_state"])
+        reviewer = self._reviewers.create_reviewer(reviewer_obj)
+        return reviewer
 
 
 pipeline = Pipeline()
