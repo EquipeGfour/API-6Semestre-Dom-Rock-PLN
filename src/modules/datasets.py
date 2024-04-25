@@ -15,9 +15,9 @@ class DatasetsController:
         return {"message": "Document created successfully"}
 
 
-    def get_dataset_id(self, doc_id: int):
+    def get_dataset_id(self, dataset_id: int):
         self._db = SessionLocal()
-        doc = self._db.query(Datasets).filter(Datasets.id == doc_id).first()
+        doc = self._db.query(Datasets).filter(Datasets.id == dataset_id).first()
         
         if doc is None:
             raise HTTPException(status_code=404, detail="Document not found")
