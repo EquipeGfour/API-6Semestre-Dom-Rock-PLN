@@ -91,7 +91,6 @@ class Pipeline:
             reviews = self._get_reviews_from_csv(dataset.link)
             process_list = list()
             max_process_limit = round(len(reviews) * 0.05)
-            print('LIMITE: ', max_process_limit)
             for review in reviews:
                 if len(process_list) > max_process_limit:
                     self._save_proccessing(process_list)
