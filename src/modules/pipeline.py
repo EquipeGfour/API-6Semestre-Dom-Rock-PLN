@@ -89,20 +89,22 @@ class Pipeline:
         try:
             dataset = self._document.get_dataset_id(dataset_id)
             reviews = self._get_reviews_from_csv(dataset.link)
-            proccess_list = list()
+            process_list = list()
+            max_process_limit = round(len(reviews) * 0.05)
+            print('LIMITE: ', max_process_limit)
             for review in reviews:
-                if len(proccess_list) > 3:
-                    self._save_proccessing(proccess_list)
-                    proccess_list.clear()
+                if len(process_list) > max_process_limit:
+                    self._save_proccessing(process_list)
+                    process_list.clear()
                 product_obj = self._save_review_product(review)
                 reviewer_obj = self._save_reviewer(review)
                 review_obj = self._save_review(review, reviewer_obj.id, product_obj.id)
                 proccess_obj = self._process_review_text(review["review_text"])
                 proccess_obj["dataset_id"] = dataset.id
                 proccess_obj["review_id"] = review_obj.id
-                proccess_list.append(proccess_obj)
-            if len(proccess_list):
-                self._save_proccessing(proccess_list)
+                process_list.append(proccess_obj)
+            if len(process_list):
+                self._save_proccessing(process_list)
 
             return "The pipeline was executed successfully"
         except Exception as e:
@@ -175,12 +177,12 @@ class Pipeline:
 
     def _process_review_text(self, review: str) -> dict:
         analysis = dict()
-        analysis["sentence"] = review
         analysis["noise_remove"] = self._token.noise_remove(review)
         analysis["tokens"] = self._token.tokenization_pipeline(analysis["noise_remove"]["value"])
         analysis["tokens_without_stop_words"] = self._token.remove_stopwords(analysis["tokens"]["value"])
         analysis["expand_abbreviations"] = self.expand_abbreviations(analysis["tokens_without_stop_words"]["value"])
         analysis["spell_check"] = self._spell_checker.check_words(analysis["expand_abbreviations"]["value"])
+        analysis['sentence_pos_tags'] = [ {'word':str(word), 'pos':word.pos_} for word in self.stopwords_model(" ".join(analysis["spell_check"]["value"]))]
         analysis["processed"] = analysis["spell_check"]["value"]
         return {"input":review, "output":dumps(analysis), "processing_time":0.0, "step": ""}
 
