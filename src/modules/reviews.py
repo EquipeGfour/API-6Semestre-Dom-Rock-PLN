@@ -19,18 +19,24 @@ class ReviewsController:
         return review
 
     def insert_review(self, review_input: ReviewInput):
-        db = SessionLocal()
-        recommend = self._evaluate_recomend_product(review_input.recomend_product)
-        review = Reviews(
-            title=review_input.title,
-            review=review_input.review,
-            rating=review_input.rating,
-            recommend_product=recommend
-        )
-        db.add(review)
-        db.commit()      
-        db.refresh(review)                              
-        return review
+        try:
+            db = SessionLocal()
+            recommend = self._evaluate_recomend_product(review_input.recomend_product)
+            review = Reviews(
+                title=review_input.title,
+                review=review_input.review,
+                rating=review_input.rating,
+                recommend_product=recommend
+            )
+            db.add(review)
+            db.commit()      
+            db.refresh(review)                              
+            return review
+        except Exception as e: 
+            msg = f'[ERROR] - ReviewsController >> fail to insert {str(e)}'
+            raise msg
+        finally:
+            return None
 
     def _evaluate_recomend_product(self, recommend:str):
         if recommend.lower() == "yes":

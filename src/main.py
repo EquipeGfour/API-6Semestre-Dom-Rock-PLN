@@ -5,6 +5,8 @@ from utils.config import Config
 from models.base_class import Base
 from db.db import engine
 from routes import preprocessing_router
+import nltk
+nltk.download('mac_morpho')
 
 
 config = Config()
