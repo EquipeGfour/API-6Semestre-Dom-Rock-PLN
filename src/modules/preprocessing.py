@@ -2,17 +2,14 @@ from db.db import SessionLocal
 from fastapi import HTTPException
 from models.datasets import Datasets
 from models.preprocessing_historics import PreprocessingHistorics
-
+from typing import List
 
 
 class PreProcessing:
-    def __init__(self) -> None:
-        self._db = SessionLocal()
-
     def insert_register(self, dataset_id: int, preprocessing_dict: dict ):
-        self._db = SessionLocal()
         try:
-            dataset = self._db.query(Datasets).filter(Datasets.id == dataset_id).first()
+            db = SessionLocal() 
+            dataset = db.query(Datasets).filter(Datasets.id == dataset_id).first()
             if dataset is None:
                 raise HTTPException(status_code=404, detail="Document not found")
             new_preprocessing = PreprocessingHistorics(
@@ -23,17 +20,46 @@ class PreProcessing:
                 processing_time=preprocessing_dict["time"],
                 #review_id=preprocessing_dict["review_id"],
             )
-            self._db.add(new_preprocessing)
-            self._db.commit()
+            db.add(new_preprocessing)
+            db.commit()
         except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+            db.rollback()
+            msg = f"[ERROR] - PreProcessing >> Fail to inset proccess into database, {str(e)}"
+            raise HTTPException(status_code=500, detail=msg)
+        finally:
+            db.close()
 
 
 
     def get_register(self, dataset_id: int):
-        self._db = SessionLocal()
-        doc = self._db.query(Datasets).filter(Datasets.id == dataset_id).first()
-        preprocessings = self._db.query(PreprocessingHistorics).filter(PreprocessingHistorics.dataset_id == dataset_id).all()
+        db = SessionLocal()
+        doc = db.query(Datasets).filter(Datasets.id == dataset_id).first()
+        preprocessings = db.query(PreprocessingHistorics).filter(PreprocessingHistorics.dataset_id == dataset_id).all()
         if doc is None:
             raise HTTPException(status_code=404, detail="Document not found")
         return preprocessings
+
+
+    def save_proccess_list(self, preprocessing_list: List[dict]):
+        try:
+            db = SessionLocal()
+            preprocessing_objects = list()
+            for item in preprocessing_list:
+                preprocessing_objects.append(
+                    PreprocessingHistorics(
+                        input=item["input"],
+                        output=item["output"],
+                        step=item["step"],
+                        dataset_id=item["dataset_id"],
+                        review_id=item["review_id"],
+                        processing_time=item["processing_time"],
+                    )
+                )
+            db.bulk_save_objects(preprocessing_objects)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            msg = f"[ERROR] - PreProcessing >> Fail to save list of proccess, {str(e)}"
+            raise HTTPException(status_code=500, detail=msg)
+        finally:
+            db.close()

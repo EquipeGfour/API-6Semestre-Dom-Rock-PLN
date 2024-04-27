@@ -64,7 +64,7 @@ class SpellChecker:
         return max(candidates, key=self.lexico_count.get)
 
 
-    def check_words(self, words: List[str]) -> Tuple[List[str], float]:
+    def check_words(self, words: List[str]) -> dict:
         start = datetime.now()
         corrected_words = []
         for word in words:
@@ -79,4 +79,4 @@ class SpellChecker:
         end = datetime.now()
         decorrido = end-start
         exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
-        return corrected_words, exec_time
+        return {"value":corrected_words, "exec_time":exec_time}

@@ -3,21 +3,29 @@ from fastapi import HTTPException
 from db.db import SessionLocal
 
 class ProductsController:
-    def create_product(self, name: str, product_id: int, brand: str, category_id: int):
-        db = SessionLocal()
-        existing_product = db.query(Products).filter(Products.product_id == product_id).first()
-        if existing_product:
-            return  existing_product
-        new_product = Products(
-            name=name,
-            product_id=product_id,
-            id_category=category_id,
-            brand=brand
-        )
-        db.add(new_product)
-        db.commit()
-        db.refresh(new_product)
-        return new_product
+    def create_product(self, product: dict, category_id: int):
+        try:
+            db = SessionLocal()
+            existing_product = db.query(Products).filter(Products.product_id == product["id"]).first()
+            if existing_product:
+                return  existing_product
+            new_product = Products(
+                name=product["name"],
+                product_id=product["id"],
+                id_category=category_id,
+                brand=product["brand"]
+            )
+            db.add(new_product)
+            db.commit()
+            db.refresh(new_product)
+            return new_product
+        except Exception as e:
+            db.rollback()
+            msg = f"[ERROR] - ProductsController >> Fail to inserto product into database, {str(e)}"
+            raise HTTPException(status_code=500, detail=msg)
+        finally:
+            db.close()
+
 
     def get_all_products(self):
         db = SessionLocal()

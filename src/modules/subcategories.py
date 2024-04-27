@@ -23,7 +23,8 @@ class SubCategoriesController:
             return subcategory
         except Exception as e:
             db.rollback()
-            raise HTTPException(status_code=500, detail=str(e))
+            msg = f"[ERROR] - SubCategoriesController >> Fail to insert subcategory {subcategory} into database, {str(e)}"
+            raise HTTPException(status_code=500, detail=msg)
         finally:
             db.close()
 

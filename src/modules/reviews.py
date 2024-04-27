@@ -5,6 +5,7 @@ from schemas.schemas import ReviewInput
 
 
 
+
 class ReviewsController:
     def get_all_reviews(self):
         db = SessionLocal()
@@ -18,7 +19,7 @@ class ReviewsController:
             raise HTTPException(status_code=404, detail="Review not found")
         return review
 
-    def insert_review(self, review_input: ReviewInput):
+    def insert_review(self, review_input: ReviewInput, reviewer_id:int, product_id:int):
         try:
             db = SessionLocal()
             recommend = self._evaluate_recomend_product(review_input.recomend_product)
@@ -26,17 +27,21 @@ class ReviewsController:
                 title=review_input.title,
                 review=review_input.review,
                 rating=review_input.rating,
-                recommend_product=recommend
+                recommend_product=recommend,
+                reviewer_id=reviewer_id,
+                product_id=product_id
             )
             db.add(review)
             db.commit()      
-            db.refresh(review)                              
+            db.refresh(review)                        
             return review
         except Exception as e: 
             msg = f'[ERROR] - ReviewsController >> fail to insert {str(e)}'
+            print(msg)
             raise msg
         finally:
-            return None
+            db.close()
+
 
     def _evaluate_recomend_product(self, recommend:str):
         if recommend.lower() == "yes":

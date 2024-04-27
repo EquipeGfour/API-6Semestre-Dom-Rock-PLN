@@ -2,16 +2,25 @@ from models.corpus import Corpus
 from schemas.schemas import CorpusInput
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from db.db import SessionLocal
 
 
 class CorpusController:
-    def create_corpus(self, data:CorpusInput,db: Session ):
-        new_corpus = Corpus(
-            corpus = data.corpus
-            )
-        db.add(new_corpus)
-        db.commit()
-        return new_corpus
+    def create_corpus(self, data:CorpusInput):
+        try:
+            db = SessionLocal()
+            new_corpus = Corpus(
+                corpus = data.corpus
+                )
+            db.add(new_corpus)
+            db.commit()
+            return new_corpus
+        except Exception as e:
+            db.rollback()
+            msg = f"[ERROR] - CorpusController >> Failed to insert corpus into database, {str(e)}"
+            raise HTTPException(status_code=500, detail=msg)
+        finally:
+            db.close()
 
 
     def get_corpus_id(self, corpus_id: int, db: Session):
