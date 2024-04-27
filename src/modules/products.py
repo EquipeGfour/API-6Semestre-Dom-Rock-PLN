@@ -2,10 +2,12 @@ from models.products import Products
 from fastapi import HTTPException
 from db.db import SessionLocal
 
-
 class ProductsController:
     def create_product(self, name: str, product_id: int, brand: str, category_id: int):
         db = SessionLocal()
+        existing_product = db.query(Products).filter(Products.product_id == product_id).first()
+        if existing_product:
+            return  existing_product
         new_product = Products(
             name=name,
             product_id=product_id,
@@ -15,7 +17,7 @@ class ProductsController:
         db.add(new_product)
         db.commit()
         db.refresh(new_product)
-        return {"message": "Product data inserted successfully"}
+        return new_product
 
     def get_all_products(self):
         db = SessionLocal()
