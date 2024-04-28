@@ -2,14 +2,13 @@ import spacy
 from nltk.corpus import mac_morpho
 from modules.token import Token
 from modules.spell_checker import SpellChecker
-from typing import List, Tuple
+from typing import List
 from modules.preprocessing import PreProcessing
 from fastapi import HTTPException
 from pandas import read_csv
 from re import compile
 from datetime import datetime
 from modules.datasets import DatasetsController
-from typing import Union
 from modules.products import ProductsController
 from modules.categories import CategoriesController
 from modules.subcategories import SubCategoriesController
@@ -18,11 +17,15 @@ from modules.reviews import ReviewsController
 from schemas.schemas import ReviewerInput
 from schemas.schemas import ReviewInput
 from json import dumps
+from modules.bag_of_words import BagOfWords
+from sklearn.neighbors import KNeighborsClassifier
+from utils.review_example import REVIEWS_EXAMPLE
 
 class Pipeline:
     def __init__(self) -> None:
         self._initialize_attributes()
         self._initialize_controllers()
+        self._inicializate_sklearn_kmeans()
 
     def _initialize_attributes(self):
         self.stopwords_model = spacy.load("pt_core_news_sm")
@@ -74,6 +77,8 @@ class Pipeline:
             "vlw": "valeu"
         }
 
+        self._analysis_reviews_example = REVIEWS_EXAMPLE
+
     def _initialize_controllers(self):
         self._preprocessing = PreProcessing()
         self._document = DatasetsController()
@@ -83,7 +88,21 @@ class Pipeline:
         self._reviewers = ReviewerController()
         self._reviews = ReviewsController()
         self._token = Token(self.stopwords_model, self.nltk_tokens)
+        self._bag_of_words = BagOfWords(corpus=self._analysis_reviews_example, tokenizer=self._token)
+        self._bag_of_words.build_model_lexicon()
         self._spell_checker = SpellChecker(self.nltk_tokens)
+
+    def _inicializate_sklearn_kmeans(self):
+        print("aqui")
+        for review in self._analysis_reviews_example:
+            review["feature_vector"] = self._bag_of_words.build_sentence_bow(review["corpus"])
+        X = []
+        y = []
+        for review in self._analysis_reviews_example:
+            X.append(review['feature_vector'])
+            y.append(review['review_type'])
+        self._kmens = KNeighborsClassifier(n_neighbors=10)
+        self._kmens.fit(X, y)
 
     def start_pipeline(self, dataset_id: int):
         try:
@@ -104,7 +123,6 @@ class Pipeline:
                 process_list.append(proccess_obj)
             if len(process_list):
                 self._save_proccessing(process_list)
-
             return "The pipeline was executed successfully"
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
@@ -183,7 +201,17 @@ class Pipeline:
         analysis["spell_check"] = self._spell_checker.check_words(analysis["expand_abbreviations"]["value"])
         analysis['sentence_pos_tags'] = [ {'word':str(word), 'pos':word.pos_} for word in self.stopwords_model(" ".join(analysis["spell_check"]["value"]))]
         analysis["processed"] = analysis["spell_check"]["value"]
+        analysis["feature_vector"] = self._bag_of_words.build_sentence_bow(analysis["processed"])
+        analysis["review_type"] = self._predict_review_type(analysis["feature_vector"])
         return {"input":review, "output":dumps(analysis), "processing_time":0.0, "step": ""}
+
+    def _predict_review_type(self, bag_of_words: List[str]):
+        try:
+            return self._kmens.predict([bag_of_words])[0]
+        except Exception as e:
+            msg = f"[ERROR] - Pipeline >> Fail on predict review type, {str(e)}"
+            print(msg)
+            raise HTTPException(status_code=500, detail=msg)
 
     def _save_proccessing(self, proccess_list: List[dict]):
         try:

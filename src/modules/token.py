@@ -57,12 +57,22 @@ class Token:
 
     def tokenization(self, sentence: str) -> List[str]:
         try:
-            tokens = findall(r'\b(?:[a-zA-Z]+)\b', sentence)
-            return tokens
+            sentences = self.sentence_tokenizer(sentence)
+            tokens = list()
+            word_regex = r'\b(?:[a-zA-Z]+)\b'
+            for sentence in sentences:
+                tokens.extend(findall(word_regex, sentence))
+            return tokens 
         except Exception as e:
             msg = f'[ERROR] - Token >> tokenization >> {str(e)}'
             print(msg)
             raise msg
+
+
+    def sentence_tokenizer(self, sentence: str) -> List[str]:
+        sentence_regex = r"[^.!?]+[.!?]"
+        sentences = findall(sentence_regex, sentence)
+        return sentences
 
 
     def remove_stopwords(self, words: List[str]) -> Tuple[List[str], float]:
