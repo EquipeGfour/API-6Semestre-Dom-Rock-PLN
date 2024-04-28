@@ -6,25 +6,38 @@ from typing import Union
 
 class CategoriesController:
     def create_category(self, category: str):
-        db = SessionLocal()
-        cat = self.get_category_by_name(category)
-        if cat:
-            return cat
-        new_category = Categories(
-            category = category
-            )
-        db.add(new_category)
-        db.commit()
-        db.refresh(new_category) 
-        return new_category
+        try:
+            db = SessionLocal()
+            cat = self.get_category_by_name(category)
+            if cat:
+                return cat
+            new_category = Categories(
+                category = category
+                )
+            db.add(new_category)
+            db.commit()
+            db.refresh(new_category) 
+            return new_category
+        except Exception as e:
+            db.rollback()
+            msg = f"[ERROR] - CategoriesController >> Fail to insert category, {str(e)}"
+            raise HTTPException(status_code=500, detail=msg)
+        finally:
+            db.close()
 
 
     def get_category_by_name(self, category: str) -> Union[Categories, None]:
-        db = SessionLocal()
-        cat = db.query(Categories).filter(Categories.category == category).first()
-        if cat is None:
-            return None
-        return cat
+        try:
+            db = SessionLocal()
+            cat = db.query(Categories).filter(Categories.category == category).first()
+            if cat is None:
+                return None
+            return cat
+        except Exception as e:
+            msg = f"[ERROR] - CategoriesController >> Fail to get category {category}, {str(e)}"
+            raise HTTPException(status_code=500, detail=msg)
+        finally:
+            db.close()
 
 
     def get_category_id(self, category_id: int):

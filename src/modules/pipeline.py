@@ -17,21 +17,19 @@ from modules.reviewers import ReviewerController
 from modules.reviews import ReviewsController
 from schemas.schemas import ReviewerInput
 from schemas.schemas import ReviewInput
+from json import dumps
 
 class Pipeline:
     def __init__(self) -> None:
-        self._preprocessing = PreProcessing()
-        self._document = DatasetsController()
-        self._products = ProductsController()
-        self._categories = CategoriesController()
-        self._subcategories = SubCategoriesController()
-        self._reviewers = ReviewerController()
-        self._reviews = ReviewsController()
-        self._inicialization_attributes()
-        self.token = Token(self.stopwrods, self.nltk_tokens)
-        self.spell_checker = SpellChecker(self.nltk_tokens)
+        self._initialize_attributes()
+        self._initialize_controllers()
 
-        self.expansions = {
+    def _initialize_attributes(self):
+        self.stopwords_model = spacy.load("pt_core_news_sm")
+        self.repeat_pattern = compile(r'(\w*)(\w)\2(\w*)')
+        self.nltk_tokens = set(mac_morpho.words())
+
+        self.abbreviations = {
             "obs": "observacao",
             "obg": "obrigado",
             "blz": "beleza",
@@ -76,62 +74,42 @@ class Pipeline:
             "vlw": "valeu"
         }
 
+    def _initialize_controllers(self):
+        self._preprocessing = PreProcessing()
+        self._document = DatasetsController()
+        self._products = ProductsController()
+        self._categories = CategoriesController()
+        self._subcategories = SubCategoriesController()
+        self._reviewers = ReviewerController()
+        self._reviews = ReviewsController()
+        self._token = Token(self.stopwords_model, self.nltk_tokens)
+        self._spell_checker = SpellChecker(self.nltk_tokens)
 
-    def _inicialization_attributes(self):
-        print("inicialize tokenization attributes")
-        self.stopwrods = spacy.load("pt_core_news_sm")
-        self.repeat_pattern = compile(r'(\w*)(\w)\2(\w*)')
-        self.match_substitution = r'\1\2\3'
-        self.nltk_tokens = set(mac_morpho.words())
-
-
-    def start_pipeline(self, dataset_id:int):
+    def start_pipeline(self, dataset_id: int):
         try:
-            """
-            Steps:
-                - Remoção de ruidos
-                - Tokenização
-                - Remoção de stopwords
-                - Expansão de palavras
-                - Correção de palavras
-            """
-
-            doc = self._document.get_dataset_id(dataset_id)
-            reviews = self.get_reviews_by_csv(doc.link)
-
+            dataset = self._document.get_dataset_id(dataset_id)
+            reviews = self._get_reviews_from_csv(dataset.link)
+            process_list = list()
+            max_process_limit = round(len(reviews) * 0.05)
             for review in reviews:
-                product_obj = {"id":review["product_id"], "name": review["product_name"], "brand": review["product_brand"]}
-                category = review["site_category_lv1"]
-                subcategory = (review["site_category_lv2"] or None)
-                product = self.save_review_product(product_obj, category, subcategory)
-                reviewer = self.save_reviewer(review)
-                reviews_obj = self.save_reviews(review)
-                sentence, exec_time = self.token.noise_remove(review["review_text"])
-                self._preprocessing.insert_register(dataset_id=dataset_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": review["review_text"], "output": sentence, "step": "Remoção de ruidos", "time": exec_time, "error":""})
-                tokens, exec_time = self.token.tokenization_pipeline(sentence)
-                self._preprocessing.insert_register(dataset_id=dataset_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": sentence, "output": str(tokens), "step": "Tokenização", "time": exec_time, "error":""})
-                tokens_without_stopwords, exec_time = self.token.remove_stopwords(tokens)
-                self._preprocessing.insert_register(dataset_id=dataset_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": str(tokens), "output": str(tokens_without_stopwords), "step": "Remoção de stopwords", "time": exec_time, "error":""})
-                tokens_with_abbreviations, exec_time = self.expand_abbreviations(tokens_without_stopwords)
-                self._preprocessing.insert_register(dataset_id=dataset_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": str(tokens_without_stopwords), "output": str(tokens_with_abbreviations), "step": "Expansão de palavras", "time": exec_time, "error":""})
-                tokens_corrected, exec_time = self.spell_checker.check_words(tokens_with_abbreviations)
-                self._preprocessing.insert_register(dataset_id=dataset_id, preprocessing_dict={"review_id": review["reviewer_id"],"input": str(tokens_without_stopwords), "output": str(tokens_corrected), "step": "Correção de palavras", "time": exec_time, "error":""})
+                if len(process_list) > max_process_limit:
+                    self._save_proccessing(process_list)
+                    process_list.clear()
+                product_obj = self._save_review_product(review)
+                reviewer_obj = self._save_reviewer(review)
+                review_obj = self._save_review(review, reviewer_obj.id, product_obj.id)
+                proccess_obj = self._process_review_text(review["review_text"])
+                proccess_obj["dataset_id"] = dataset.id
+                proccess_obj["review_id"] = review_obj.id
+                process_list.append(proccess_obj)
+            if len(process_list):
+                self._save_proccessing(process_list)
+
             return "The pipeline was executed successfully"
         except Exception as e:
-            print(e)
             raise HTTPException(status_code=500, detail=str(e))
 
-
-    def expand_abbreviations(self, words) -> Tuple[List[str], float]:
-        start = datetime.now()
-        expanded_words = [self.expansions[word] if word in self.expansions else word for word in words]
-        end = datetime.now()
-        decorrido = end-start
-        exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
-        return expanded_words, exec_time
-
-
-    def get_reviews_by_csv(self, path:str):
+    def _get_reviews_from_csv(self, path: str):
         dataset_types = {
                 "submission_date": str,
                 "reviewer_id":str,
@@ -148,26 +126,80 @@ class Pipeline:
                 "reviewer_gender": str,
                 "reviewer_state": str
             }
-        dataset = read_csv(path, delimiter=",", dtype=dataset_types)
-        train_data = dataset.dropna()
-        train_data = train_data.to_dict(orient='records')
-        return train_data
+        dataset = read_csv(path, delimiter=",", dtype=dataset_types).dropna()
+        return dataset.to_dict(orient='records')
 
-    def save_review_product(self, product_obj: dict, category_name: str, subcategory_name: Union[str, None] = None):
-        category = self._categories.create_category(category_name)
-        if isinstance(subcategory_name, str):
-            self._subcategories.create_subcategory(subcategory_name, category.id)
-        product = self._products.create_product(product_obj["name"], product_obj["id"], product_obj["brand"], category.id)
-        return product
+    def _save_review_product(self, review: dict):
+        try:
+            category = self._categories.create_category(review["site_category_lv1"])
+            if review["site_category_lv2"]:
+                self._subcategories.create_subcategory(review["site_category_lv2"], category.id)
 
-    def save_reviewer(self, review: dict):
-        reviewer_obj = ReviewerInput(reviewer_id=review["reviewer_id"], birth_year=review["reviewer_birth_year"], gender=review["reviewer_gender"], state=review["reviewer_state"])
-        reviewer = self._reviewers.create_reviewer(reviewer_obj)
-        return reviewer
-    
-    def save_reviews(self, reviews: dict):
-        reviewer_obj = ReviewInput(review=reviews["review_text"],rating=reviews["overall_rating"],recomend_product=reviews["recommend_to_a_friend"],title=reviews["review_title"])
-        reviews_result = self._reviews.insert_review(reviewer_obj)
-        return reviews_result
-    
+            product_obj = {
+                "id": review["product_id"],
+                "name": review["product_name"],
+                "brand": review["product_brand"]
+            }
+            return self._products.create_product(product_obj, category.id)
+        except Exception as e:
+            msg = f"[ERROR] - Pipeline >> Fait on save product, {str(e)}"
+            print(msg)
+            raise HTTPException(status_code=500, detail=msg)
+
+    def _save_reviewer(self, review: dict):
+        try:
+            reviewer_obj = ReviewerInput(
+                reviewer_id=review["reviewer_id"],
+                birth_year=review["reviewer_birth_year"],
+                gender=review["reviewer_gender"],
+                state=review["reviewer_state"]
+            )
+            return self._reviewers.create_reviewer(reviewer_obj)
+        except Exception as e:
+            msg = f"[ERROR] - Pipeline >> Fait on save reviewer, {str(e)}"
+            print(msg)
+            raise HTTPException(status_code=500, detail=msg)
+
+    def _save_review(self, review:dict, reviewer_id, product_id):
+        try:
+            review_obj = ReviewInput(
+                review=review["review_text"],
+                rating=review["overall_rating"],
+                recomend_product=review["recommend_to_a_friend"],
+                title=review["review_title"]
+            )
+            return self._reviews.insert_review(review_obj, reviewer_id, product_id)
+        except Exception as e:
+            msg = f"[ERROR] - Pipeline >> Fait on save review in database, {str(e)}"
+            print(msg)
+            raise HTTPException(status_code=500, detail=msg)
+
+    def _process_review_text(self, review: str) -> dict:
+        analysis = dict()
+        analysis["noise_remove"] = self._token.noise_remove(review)
+        analysis["tokens"] = self._token.tokenization_pipeline(analysis["noise_remove"]["value"])
+        analysis["tokens_without_stop_words"] = self._token.remove_stopwords(analysis["tokens"]["value"])
+        analysis["expand_abbreviations"] = self.expand_abbreviations(analysis["tokens_without_stop_words"]["value"])
+        analysis["spell_check"] = self._spell_checker.check_words(analysis["expand_abbreviations"]["value"])
+        analysis['sentence_pos_tags'] = [ {'word':str(word), 'pos':word.pos_} for word in self.stopwords_model(" ".join(analysis["spell_check"]["value"]))]
+        analysis["processed"] = analysis["spell_check"]["value"]
+        return {"input":review, "output":dumps(analysis), "processing_time":0.0, "step": ""}
+
+    def _save_proccessing(self, proccess_list: List[dict]):
+        try:
+            self._preprocessing.save_proccess_list(proccess_list)
+        # Save other processing steps similarly
+        except Exception as e:
+            msg = f"[ERROR] - Pipeline >> Fail on save proccessing, {str(e)}"
+            print(msg)
+            raise HTTPException(status_code=500, detail=msg)
+
+    def expand_abbreviations(self, words) -> dict:
+        start = datetime.now()
+        expanded_words = [self.abbreviations[word] if word in self.abbreviations else word for word in words]
+        end = datetime.now()
+        decorrido = end-start
+        exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
+        return {"value":expanded_words, "exec_time":exec_time}
+
 pipeline = Pipeline()
