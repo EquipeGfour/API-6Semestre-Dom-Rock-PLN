@@ -49,10 +49,8 @@ class PreProcessing:
                     PreprocessingHistorics(
                         input=item["input"],
                         output=item["output"],
-                        step=item["step"],
                         dataset_id=item["dataset_id"],
                         review_id=item["review_id"],
-                        processing_time=item["processing_time"],
                     )
                 )
             db.bulk_save_objects(preprocessing_objects)

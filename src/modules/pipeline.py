@@ -93,7 +93,6 @@ class Pipeline:
         self._spell_checker = SpellChecker(self.nltk_tokens)
 
     def _inicializate_sklearn_kmeans(self):
-        print("aqui")
         for review in self._analysis_reviews_example:
             review["feature_vector"] = self._bag_of_words.build_sentence_bow(review["corpus"])
         X = []
@@ -203,7 +202,7 @@ class Pipeline:
         analysis["processed"] = analysis["spell_check"]["value"]
         analysis["feature_vector"] = self._bag_of_words.build_sentence_bow(analysis["processed"])
         analysis["review_type"] = self._predict_review_type(analysis["feature_vector"])
-        return {"input":review, "output":dumps(analysis), "processing_time":0.0, "step": ""}
+        return {"input":review, "output":dumps(analysis)}
 
     def _predict_review_type(self, bag_of_words: List[str]):
         try:

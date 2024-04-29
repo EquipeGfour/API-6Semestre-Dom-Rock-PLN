@@ -13,11 +13,12 @@ class Token:
 
     def noise_remove(self, sentence: str) -> dict:
         try:
-            start = time.time()
+            start = datetime.now()
             sentence_lower = self.parse_to_lower(sentence)
             sentence_without_noise = self.accent_remover(sentence_lower)
-            end = time.time()
-            exec_time = end - start
+            end = datetime.now()
+            decorrido = end-start
+            exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
             return {"value":sentence_without_noise, "exec_time":exec_time}
         except Exception as e:
             msg = f'[ERROR] - Token >> noise_remove >> {str(e)}'
@@ -42,12 +43,13 @@ class Token:
 
     def tokenization_pipeline(self, sentence) -> dict:
         try:
-            start = time.time()
+            start = datetime.now()
             tokens = self.tokenization(sentence)
             tokens_lemmatized = self.lemmatize_spacy(tokens)
             tokens_adjusted = self.remove_repeated_characters(tokens_lemmatized)
-            end = time.time()
-            exec_time = end - start
+            end = datetime.now()
+            decorrido = end-start
+            exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
             return {'value': tokens_adjusted, "exec_time":exec_time}
         except Exception as e:
             msg = f'[ERROR] - Token >> tokenization_pipeline >> {str(e)}'
@@ -77,11 +79,11 @@ class Token:
 
     def remove_stopwords(self, words: List[str]) -> Tuple[List[str], float]:
         try:
-            start = time.time()
+            start = datetime.now()
             # Ajustado para remover stopwords diretamente de uma lista de palavras
             words_without_stop_words = [word for word in words if not self.stopwords.vocab[word].is_stop]
-            end = time.time()
-            exec_time = end - start
+            decorrido = datetime.now()-start
+            exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
             return {"value":words_without_stop_words, "exec_time":exec_time}
         except Exception as e:
             msg = f'[ERROR] - Token >> remove_stopwords >> {str(e)}'
@@ -92,7 +94,6 @@ class Token:
     def remove_repeated_characters(self, tokens: List[str]) -> List[str]:
         try:
             corrected_words = []
-            start = time.time()
             for token in tokens:
                 if token in self.lexico:
                     corrected_words.append(token)
@@ -103,7 +104,6 @@ class Token:
                         corrected_words.append(token)
                         break
                     token = new_token
-            exec_time = time.time() - start
             return corrected_words
         except Exception as e:
             msg = f'[ERROR] - Token >> remove_repeated_characters >> {str(e)}'
