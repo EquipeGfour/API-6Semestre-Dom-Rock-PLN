@@ -10,3 +10,5 @@ uvicorn
 unidecode
 sqlalchemy
 pymysql
+scikit-learn
+cryptography

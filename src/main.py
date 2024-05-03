@@ -2,9 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn import run
 from utils.config import Config
-from models.base import Base
+from models.base_class import Base
 from db.db import engine
 from routes import preprocessing_router
+import nltk
+nltk.download('mac_morpho')
 
 
 config = Config()
