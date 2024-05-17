@@ -5,6 +5,7 @@ from utils.config import Config
 from models.base_class import Base
 from db.db import engine
 from routes import preprocessing_router
+from routes import produts_router
 import nltk
 nltk.download('mac_morpho')
 
@@ -31,6 +32,7 @@ def read_root():
     return "is running..."
 
 app.include_router(preprocessing_router, prefix="/preprocessing", tags=["preprocessing"])
+app.include_router(produts_router, prefix="/products", tags=["products"])
 
 
 if __name__ == "__main__":
