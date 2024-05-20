@@ -57,3 +57,12 @@ class CategoryInput(BaseModel):
 class SubCategoryInput(BaseModel):
     id_category : Union[int, None]
     subcategory:str
+
+class TrainingModelInput(BaseModel):
+    name: str
+    link: str
+    path: str
+    lexico: str = None 
+
+class LexicoInput(BaseModel):
+    lexico: str

@@ -9,3 +9,5 @@ from models.processing_errors import ProcessingError
 from models.reviewers import Reviewers
 from models.categories import Categories
 from models.subcategories import SubCategories
+from models.training_model import Training_model
+from models.lexico import Lexico
