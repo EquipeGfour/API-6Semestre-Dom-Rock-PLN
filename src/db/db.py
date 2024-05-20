@@ -11,9 +11,8 @@ from models.reviews import Base
 from models.processing_errors import Base
 from models.categories import Base
 from models.subcategories import Base
-
-
-
+from models.training_model import Base
+from models.lexico import Base
 
 config = Config()
 
