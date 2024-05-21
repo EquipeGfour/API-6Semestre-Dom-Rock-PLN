@@ -1,42 +1,43 @@
-from requests import Session
 from sqlalchemy import desc
-from schemas.schemas import LexicoInput, TrainingModelInput
-from models.training_model import Training_model
-from models.lexico import Lexico
-from fastapi import Depends, HTTPException
-from db.db import get_db, SessionLocal
+from models.training_model import TrainingModel
+from models.lexico import LexicoModel
+from db.db import SessionLocal
+from json import dumps
+
+
 
 class TrainingModelController:
-    def create_trainingModel(self, TrainingModel_data):
+    def create_trainingModel(self, training_model: dict, lexico: dict):
         db = SessionLocal()
         try:
-            new_lexico = Lexico(lexico=TrainingModel_data.lexico)
+            new_lexico = LexicoModel(lexico=dumps(lexico))
             db.add(new_lexico)
             db.commit()
             db.refresh(new_lexico)
-            new_TrainingModel = Training_model(
-                name=TrainingModel_data.name,
-                link=TrainingModel_data.link,
-                path=TrainingModel_data.path,
+            new_Training_model = TrainingModel(
+                name=training_model["name"],
+                link=training_model["link"],
+                path=training_model["path"],
                 lexico_id=new_lexico.id  
             )
-            db.add(new_TrainingModel)
+            db.add(new_Training_model)
             db.commit()
-            db.refresh(new_TrainingModel)
+            db.refresh(new_Training_model)
             return {"message": "Training_model data inserted successfully"}
         finally:
             db.close()  
 
+
     def get_latest_training_model_with_lexico(self):
         db = SessionLocal()
         try:
-            latest_training_model = db.query(Training_model).order_by(desc(Training_model.id)).first()
+            latest_training_model = db.query(TrainingModel).order_by(desc(TrainingModel.id)).first()
             if not latest_training_model:
                 return {
                     "training_model": {},
                     "lexico": {}
                 }
-            lexico = db.query(Lexico).filter(Lexico.id == latest_training_model.lexico_id).first()
+            lexico = db.query(LexicoModel).filter(LexicoModel.id == latest_training_model.lexico_id).first()
             if not lexico:
                 return {
                     "training_model": {

@@ -3,3 +3,5 @@ venv
 config.ini
 __pycache__
 *.csv
+*.pkl
+resources

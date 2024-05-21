@@ -1,3 +1,7 @@
+from nltk import download
+from os import makedirs
+from os.path import exists
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from uvicorn import run
@@ -7,8 +11,15 @@ from db.db import engine
 from routes import preprocessing_router
 from routes import produts_router
 from routes import training_model_router
-import nltk
-nltk.download('mac_morpho')
+
+
+TRAINING_MODEL_RESOURCE_FOLDER = "resource"
+if not exists(TRAINING_MODEL_RESOURCE_FOLDER):
+    makedirs(TRAINING_MODEL_RESOURCE_FOLDER)
+
+# Download nltk corpus
+download('mac_morpho')
+download('stopwords')
 
 config = Config()
 
@@ -31,13 +42,13 @@ def create_tables():
 def read_root():
     return "is running..."
 
+
+
 app.include_router(preprocessing_router, prefix="/preprocessing", tags=["preprocessing"])
 app.include_router(produts_router, prefix="/products", tags=["products"])
 app.include_router(training_model_router, prefix="/training_model", tags=["Training_Model"])
 
 
-
 if __name__ == "__main__":
     port = int(config._g.get("application", "port", fallback=8001))
     run("main:app", host="0.0.0.0", port= port, log_level="debug", reload=True)
-    

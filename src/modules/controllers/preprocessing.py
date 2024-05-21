@@ -3,6 +3,7 @@ from fastapi import HTTPException
 from models.datasets import Datasets
 from models.preprocessing_historics import PreprocessingHistorics
 from typing import List
+from json import dumps
 
 
 class PreProcessing:
@@ -44,13 +45,18 @@ class PreProcessing:
         try:
             db = SessionLocal()
             preprocessing_objects = list()
+
             for item in preprocessing_list:
+                dataset_id = item["dataset_id"]
+                review_id = item["review_id"]
+                del item["dataset_id"]
+                del item["review_id"]
                 preprocessing_objects.append(
                     PreprocessingHistorics(
-                        input=item["input"],
-                        output=item["output"],
-                        dataset_id=item["dataset_id"],
-                        review_id=item["review_id"],
+                        input=item["original_doc"],
+                        output=dumps(item),
+                        dataset_id=dataset_id,
+                        review_id=review_id,
                     )
                 )
             db.bulk_save_objects(preprocessing_objects)

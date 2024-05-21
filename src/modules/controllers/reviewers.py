@@ -6,8 +6,14 @@ from schemas.schemas import ReviewerInput
 from typing import Union
 
 class ReviewerController:
-    def create_reviewer(self, reviewer_data: ReviewerInput):
+    def create_reviewer(self, review: dict):
         try:
+            reviewer_data = ReviewerInput(
+                reviewer_id=review["reviewer_id"],
+                birth_year=review["reviewer_birth_year"],
+                gender=review["reviewer_gender"],
+                state=review["reviewer_state"]
+            )
             db = SessionLocal()
             reviewer = self.get_reviewer_by_id(reviewer_data.reviewer_id)
             if reviewer:

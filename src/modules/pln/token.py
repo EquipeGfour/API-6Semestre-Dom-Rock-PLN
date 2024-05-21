@@ -1,29 +1,26 @@
-from re import findall, compile
-from time import time
+from re import compile, findall
 from typing import List, Tuple
 from unidecode import unidecode
-from datetime import datetime
-import time
+from modules.pln.lexico import Lexico
+from spacy import load
+
 
 class Token:
-    def __init__(self, stopwords: List[str], lexico: List[str]):
-        self.stopwords = stopwords
-        self.repeat_pattern = compile(r'(\w*)(\w)\2(\w*)')
-        self.lexico = lexico
+    spacy_stopwords = load("pt_core_news_sm")
+    repeat_pattern = compile(r'(\w*)(\w)\2(\w*)')
+
+    def __init__(self, lexico: Lexico = None):
+        self.lexico = (lexico or Lexico())
 
     def noise_remove(self, sentence: str) -> dict:
         try:
-            start = datetime.now()
             sentence_lower = self.parse_to_lower(sentence)
             sentence_without_noise = self.accent_remover(sentence_lower)
-            end = datetime.now()
-            decorrido = end-start
-            exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
-            return {"value":sentence_without_noise, "exec_time":exec_time}
+            return sentence_without_noise
         except Exception as e:
-            msg = f'[ERROR] - Token >> noise_remove >> {str(e)}'
+            msg = f'[ERROR] - Token >> noise_remove {str(e)}'
+            print(msg)
             raise msg
-
 
     def accent_remover(self, texto):
         return unidecode(texto)
@@ -33,29 +30,22 @@ class Token:
 
     def lemmatize_spacy(self, words: List[str]) -> List[str]:
         try:
-            # Não ficou claro de onde vem o objeto self.stopwrods, então ajustei para uma lista de stopwords
-            return [token.lemma_.lower() for word in words for token in self.stopwords(word.lower())]
+            return [token.lemma_.lower() for word in words for token in Token.spacy_stopwords(word.lower())]
         except Exception as e:
             msg = f'[ERROR] - Token >> lemmatize_spacy >> {str(e)}'
             print(msg)
             raise msg
 
-
-    def tokenization_pipeline(self, sentence) -> dict:
+    def tokenization_pipeline(self, sentence: list) -> dict:
         try:
-            start = datetime.now()
             tokens = self.tokenization(sentence)
             tokens_lemmatized = self.lemmatize_spacy(tokens)
             tokens_adjusted = self.remove_repeated_characters(tokens_lemmatized)
-            end = datetime.now()
-            decorrido = end-start
-            exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
-            return {'value': tokens_adjusted, "exec_time":exec_time}
+            return tokens_adjusted
         except Exception as e:
             msg = f'[ERROR] - Token >> tokenization_pipeline >> {str(e)}'
             print(msg)
             raise msg
-
 
     def tokenization(self, sentence: str) -> List[str]:
         try:
@@ -64,42 +54,35 @@ class Token:
             word_regex = r'\b(?:[a-zA-Z]+)\b'
             for sentence in sentences:
                 tokens.extend(findall(word_regex, sentence))
-            return tokens 
+            return tokens
         except Exception as e:
-            msg = f'[ERROR] - Token >> tokenization >> {str(e)}'
+            msg = f'[ERROR] - Token >> tokenization, err: {str(e)}'
             print(msg)
             raise msg
-
 
     def sentence_tokenizer(self, sentence: str) -> List[str]:
         sentence_regex = r"[^.!?]+[.!?]"
         sentences = findall(sentence_regex, sentence)
         return sentences
 
-
     def remove_stopwords(self, words: List[str]) -> Tuple[List[str], float]:
         try:
-            start = datetime.now()
-            # Ajustado para remover stopwords diretamente de uma lista de palavras
-            words_without_stop_words = [word for word in words if not self.stopwords.vocab[word].is_stop]
-            decorrido = datetime.now()-start
-            exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
-            return {"value":words_without_stop_words, "exec_time":exec_time}
+            words_without_stop_words = [word for word in words if not Token.spacy_stopwords.vocab[word].is_stop]
+            return words_without_stop_words
         except Exception as e:
             msg = f'[ERROR] - Token >> remove_stopwords >> {str(e)}'
             print(msg)
             raise msg
 
-
     def remove_repeated_characters(self, tokens: List[str]) -> List[str]:
         try:
             corrected_words = []
             for token in tokens:
-                if token in self.lexico:
+                if token in self.lexico.lexico:
                     corrected_words.append(token)
                     continue
                 while True:
-                    new_token = self.repeat_pattern.sub(r'\1\2\3', token)
+                    new_token = Token.repeat_pattern.sub(r'\1\2\3', token)
                     if new_token == token:
                         corrected_words.append(token)
                         break

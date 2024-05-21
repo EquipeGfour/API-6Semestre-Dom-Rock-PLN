@@ -2,7 +2,9 @@ from sqlalchemy import TIMESTAMP, Column, ForeignKey, Integer, String
 from models.base_class import Base
 from sqlalchemy.sql import func
 
-class Training_model(Base):
+
+
+class TrainingModel(Base):
     __tablename__ = 'training_model'
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
