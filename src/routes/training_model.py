@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Body, HTTPException
-from pydantic import BaseModel
-from requests import Session
-from modules.training_model import TrainingModelController
+from fastapi import APIRouter, HTTPException
+from modules.controllers.training_model import TrainingModelController
 from schemas.schemas import TrainingModelInput
 from fastapi import APIRouter, Depends
 

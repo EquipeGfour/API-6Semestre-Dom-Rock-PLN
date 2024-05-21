@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Query
-from modules.products import ProductsController
+from modules.controllers.products import ProductsController
 
 router = APIRouter()
 
