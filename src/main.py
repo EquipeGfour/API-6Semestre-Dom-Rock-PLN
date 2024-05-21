@@ -1,6 +1,17 @@
-from nltk import download
 from os import makedirs
 from os.path import exists
+from nltk import download
+
+TRAINING_MODEL_RESOURCE_FOLDER = "resources"
+if not exists(TRAINING_MODEL_RESOURCE_FOLDER):
+    makedirs(TRAINING_MODEL_RESOURCE_FOLDER)
+    print("Create resource folders")
+else:
+    print("Resource folders already exists")
+
+# Download nltk corpus
+download('mac_morpho')
+download('stopwords')
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,13 +24,6 @@ from routes import produts_router
 from routes import training_model_router
 
 
-TRAINING_MODEL_RESOURCE_FOLDER = "resource"
-if not exists(TRAINING_MODEL_RESOURCE_FOLDER):
-    makedirs(TRAINING_MODEL_RESOURCE_FOLDER)
-
-# Download nltk corpus
-download('mac_morpho')
-download('stopwords')
 
 config = Config()
 

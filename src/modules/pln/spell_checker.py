@@ -69,12 +69,12 @@ class SpellChecker:
         for word in words:
             if not word in self.lexico.lexico:
                 predict = self.correct(word)
-                # if predict == word:
-                #     # print(f"não foi possivel corrigir a palavra: {word}")
-                #     # raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
-                # else:
-                #     word = predict
-                word = predict
+                if predict == word:
+                    print(f"não foi possivel corrigir a palavra: {word}")
+                    # raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
+                else:
+                    word = predict
+                #word = predict
             corrected_words.append(word)
         if add_to_lexico:
             #self.add_word_to_lexico(corrected_words)
