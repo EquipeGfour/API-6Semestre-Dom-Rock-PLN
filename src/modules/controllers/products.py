@@ -4,8 +4,15 @@ from models.reviews import Reviews
 from fastapi import HTTPException
 from db.db import SessionLocal
 from datetime import datetime
+from sqlalchemy.orm import Session
+from typing import List
+from models.preprocessing_historics import PreprocessingHistorics
+from json import loads
+from modules.pln.summary import Summary
 
 class ProductsController:
+    def __init__(self):
+        self.summary = Summary()
     def create_product(self, product: dict, category_id: int):
         try:
             db = SessionLocal()
@@ -41,7 +48,7 @@ class ProductsController:
             raise HTTPException(status_code=404, detail="Product not found")
         return product
 
-    def get_gender_count_by_age_range(age_range: str, product_id: int):
+    def get_gender_count_by_age_range(self, age_range: str, product_id: int):
         try:
             def calculate_age(birth_year: int) -> int:
                 current_year = datetime.now().year
@@ -76,6 +83,19 @@ class ProductsController:
             raise HTTPException(status_code=500, detail=msg)
         finally:
             db.close()
+
+    def generate_summarization_by_product(self, product_id):
+        db = SessionLocal()
+        query_result = db.query(PreprocessingHistorics.output).\
+                join(Reviews, Reviews.id == PreprocessingHistorics.review_id).\
+                join(Products, Products.id == Reviews.product_id).\
+                filter(Products.id == product_id).all()
+        reviews = []
+        for review in query_result:
+            reviews.append(loads(review[0]))
+        ret = self.summary.sumary_extractive(reviews)
+        return ret
+
 
 
 
