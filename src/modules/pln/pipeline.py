@@ -156,7 +156,6 @@ class Pipeline:
                 product_obj = self._save_review_product(review)
                 reviewer_obj = self._reviewers.create_reviewer(review)
                 review_obj = self._reviews.insert_review(review, reviewer_obj.id, product_obj.id)
-                #breakpoint()
                 process_review = self.process_review_text(review)
                 process_review["dataset_id"] = dataset.id
                 process_review["review_id"] = review_obj.id

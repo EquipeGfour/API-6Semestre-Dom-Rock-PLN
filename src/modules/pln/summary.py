@@ -55,6 +55,5 @@ class Summary:
     def __words_frequency(self, reviews: List[Tuple[dict]]) -> List[Tuple[str, int]]:
         reviews_tokens = [token for review in reviews for token in review["processed"]]
         words_frequency = dict(Counter(reviews_tokens))                                                 ## RETORNA UM DICIONARIO
-        #breakpoint()
         words_frequency_sorted= sorted(words_frequency.items(), key=lambda item: item[1], reverse=True) ## RETORNA UMA LISTA DE TUPLAS EM ORDEM DESCRESCENTE
         return words_frequency_sorted

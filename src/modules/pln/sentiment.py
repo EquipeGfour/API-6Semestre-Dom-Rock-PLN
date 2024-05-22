@@ -9,7 +9,6 @@ import os
 #### Ao inicializar a classe buscar para ver se existe um registro de lexico no banco
 ### Caso não exista gerar um modelo de treinamento com base no lexico atual e salvar o lexico/modelo atual
 
-#### Tornar a classe singleton ?
 class SentimentKMeansClassifier:
     PATH = os.path.join(os.path.abspath(os.getcwd()), 'resources')
 
