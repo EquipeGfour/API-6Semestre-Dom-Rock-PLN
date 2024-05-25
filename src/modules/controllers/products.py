@@ -83,17 +83,19 @@ class ProductsController:
 
     def generate_summarization_by_product(self, product_id):
         db = SessionLocal()
-        query_result = db.query(PreprocessingHistorics.output).\
-                join(Reviews, Reviews.id == PreprocessingHistorics.review_id).\
-                join(Products, Products.id == Reviews.product_id).\
-                filter(Products.id == product_id).all()
-        reviews = []
-        for review in query_result:
-            reviews.append(loads(review[0]))
-        ret = self.summary.sumary_extractive(reviews)
-        return ret
-
-
-
-
+        try:
+            query_result = db.query(PreprocessingHistorics.output).\
+                    join(Reviews, Reviews.id == PreprocessingHistorics.review_id).\
+                    join(Products, Products.id == Reviews.product_id).\
+                    filter(Products.id == product_id).all()
+            reviews = []
+            for review in query_result:
+                reviews.append(loads(review[0]))
+            ret = self.summary.sumary_extractive(reviews)
+            return ret
+        except Exception as e:
+            msg = f"[ERROR] - ProductsController >> Failed to generate summarization by product: {str(e)}"
+            raise HTTPException(status_code=500, detail=msg)
+        finally:
+            db.close()
 

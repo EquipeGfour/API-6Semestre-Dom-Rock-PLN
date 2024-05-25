@@ -3,11 +3,13 @@ from typing import List, Tuple
 from schemas.summary import SummaryObj, SummaryDocScore
 from modules.pln.lexico import Lexico
 from schemas.doc import Doc
+from modules.pln.token import Token
 
 
 class Summary:
     def __init__(self, lexico: Lexico = None):
-        self.lexico = (lexico or Lexico())
+        self._lexico = (lexico or Lexico())
+        self._token = Token(lexico=self._lexico)
 
     def sumary_extractive(self, reviews: List[Doc]) -> SummaryObj:
         reviews_filtered = self.__filter_reviews_type(reviews)
@@ -16,9 +18,9 @@ class Summary:
             if reviews_list:
                 reviews_with_score = []
                 for review in reviews_list:
-                    reviews_with_score.append({"doc":review["original_doc"], "doc_score": self._calc_doc_score(review["sentence_pos_tags"])})
-                reviews_filtered[review_type]["reviews"] = self.__sort_reviews(reviews_with_score)
-                reviews_filtered[review_type]["words_frequency"] = self.__words_frequency(reviews_list)
+                    reviews_with_score.append({"doc":review["noise_remove"]['value'], "doc_score": self._calc_doc_score(review["sentence_pos_tags"])})
+                reviews_filtered[review_type]["reviews"] = self.__sort_reviews(reviews_with_score)[0:5]
+                reviews_filtered[review_type]["words_frequency"] = self.__words_frequency(reviews_list)[0:5]
         return reviews_filtered
 
 
@@ -26,9 +28,9 @@ class Summary:
         doc_score = 0
         for tag_pair in pos_tags:
             #if tag_pair['pos'] == 'ADJ' and (tag_pair['word'] in self.bag_of_words._lexicon):
-            if tag_pair['pos'] == 'ADJ' and (tag_pair['word'] in self.lexico.lexico):
+            if tag_pair['pos'] == 'ADJ' and (tag_pair['word'] in self._lexico.lexico):
                 #doc_score += self.bag_of_words._lexicon[tag_pair['word']] 
-                doc_score += self.lexico.lexico[tag_pair['word']] 
+                doc_score += self._lexico.lexico[tag_pair['word']] 
         return doc_score
 
 
@@ -53,7 +55,12 @@ class Summary:
 
 
     def __words_frequency(self, reviews: List[Tuple[dict]]) -> List[Tuple[str, int]]:
-        reviews_tokens = [token for review in reviews for token in review["processed"]]
-        words_frequency = dict(Counter(reviews_tokens))                                                 ## RETORNA UM DICIONARIO
-        words_frequency_sorted= sorted(words_frequency.items(), key=lambda item: item[1], reverse=True) ## RETORNA UMA LISTA DE TUPLAS EM ORDEM DESCRESCENTE
+        reviews_tokens = []
+        #reviews_tokens = [token for review in reviews for token in review["tokens"]["value"]]
+        for review in reviews:
+            tokens = self._token.tokenization(review["noise_remove"]["value"])
+            tokens_withou_stopwords = self._token.remove_stopwords(tokens)
+            reviews_tokens.extend(tokens_withou_stopwords)
+        words_frequency = dict(Counter(reviews_tokens))                                                  ## RETORNA UM DICIONARIO
+        words_frequency_sorted = sorted(words_frequency.items(), key=lambda item: item[1], reverse=True) ## RETORNA UMA LISTA DE TUPLAS EM ORDEM DESCRESCENTE
         return words_frequency_sorted
