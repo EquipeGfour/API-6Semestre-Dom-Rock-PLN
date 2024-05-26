@@ -1,19 +1,19 @@
-from collections import Counter
-from typing import List, Tuple
-from fastapi import HTTPException
-from datetime import datetime
-
+from typing import List
+from modules.pln.lexico import Lexico
 
 
 class SpellChecker:
-    def __init__(self, lexico:List[str]):
-        self.lexico: list = lexico
-        self.lexico_count = Counter(self.lexico)
+    def __init__(self, lexico:Lexico = None):
+        self.lexico = (lexico or Lexico())
+        #self.lexico_count = Counter(self.lexico)
 
 
-    def add_word_to_lexico(self,word:str):
-        self.lexico.append(word)
-        self.lexico_count = Counter(self.lexico)
+    def add_word_to_lexico(self,words:List[str]):
+        for word in words:
+            if word in self.lexico.lexico:
+                self.lexico.lexico[word] += 1
+            else:
+                self.lexico.lexico[word] = 1
 
 
     def edits0(self, word):
@@ -49,7 +49,7 @@ class SpellChecker:
         Return the subset of words that are actually 
         in our WORD_COUNTS dictionary.
         """
-        return {w for w in words if w in self.lexico_count}
+        return {w for w in words if w in self.lexico.lexico}
 
 
     def correct(self, word): #Sarkar
@@ -61,22 +61,22 @@ class SpellChecker:
         candidates = (self.known(self.edits0(word)) or 
                     self.known(self.edits1(word)) or                   
                     [word])
-        return max(candidates, key=self.lexico_count.get)
+        return max(candidates, key=self.lexico.lexico.get)
 
 
-    def check_words(self, words: List[str]) -> dict:
-        start = datetime.now()
+    def check_words(self, words: List[str], add_to_lexico: bool = False) -> dict:
         corrected_words = []
         for word in words:
-            if not word in self.lexico:
+            if not word in self.lexico.lexico:
                 predict = self.correct(word)
                 if predict == word:
                     print(f"não foi possivel corrigir a palavra: {word}")
                     # raise HTTPException(status_code=500, detail=f"não foi possivel corrigir a palavra: {word}")
                 else:
                     word = predict
-            corrected_words.append(word)        
-        end = datetime.now()
-        decorrido = end-start
-        exec_time = float(f"{decorrido.seconds}.{decorrido.microseconds}")
-        return {"value":corrected_words, "exec_time":exec_time}
+                #word = predict
+            corrected_words.append(word)
+        if add_to_lexico:
+            #self.add_word_to_lexico(corrected_words)
+            self.lexico.add_word_to_lexico(corrected_words)
+        return corrected_words

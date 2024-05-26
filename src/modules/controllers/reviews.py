@@ -19,14 +19,15 @@ class ReviewsController:
             raise HTTPException(status_code=404, detail="Review not found")
         return review
 
-    def insert_review(self, review_input: ReviewInput, reviewer_id:int, product_id:int):
+    def insert_review(self, review_input: dict, reviewer_id:int, product_id:int):
         try:
             db = SessionLocal()
-            recommend = self._evaluate_recomend_product(review_input.recomend_product)
+
+            recommend = self._evaluate_recomend_product(review_input["recommend_to_a_friend"])
             review = Reviews(
-                title=review_input.title,
-                review=review_input.review,
-                rating=review_input.rating,
+                title=review_input["review_title"],
+                review=review_input["review_text"],
+                rating=review_input["overall_rating"],
                 recommend_product=recommend,
                 reviewer_id=reviewer_id,
                 product_id=product_id

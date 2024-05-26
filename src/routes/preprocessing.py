@@ -1,6 +1,5 @@
 from fastapi import APIRouter
-from modules.preprocessing import PreProcessing
-from modules.pipeline import pipeline
+from modules.pln.pipeline import pipeline
 
 
 router = APIRouter()
