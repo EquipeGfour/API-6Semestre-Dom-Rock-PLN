@@ -55,11 +55,12 @@ class Summary:
 
 
     def __words_frequency(self, reviews: List[Tuple[dict]]) -> List[Tuple[str, int]]:
+        words_to_be_removed = ["em o", "nao", "tv", "so", "ficar", "ja"]
         reviews_tokens = []
-        #reviews_tokens = [token for review in reviews for token in review["tokens"]["value"]]
         for review in reviews:
             tokens = self._token.tokenization(review["noise_remove"]["value"])
             tokens_withou_stopwords = self._token.remove_stopwords(tokens)
+            tokens_withou_stopwords = [word for word in tokens_withou_stopwords if word not in words_to_be_removed]
             reviews_tokens.extend(tokens_withou_stopwords)
         words_frequency = dict(Counter(reviews_tokens))                                                  ## RETORNA UM DICIONARIO
         words_frequency_sorted = sorted(words_frequency.items(), key=lambda item: item[1], reverse=True) ## RETORNA UMA LISTA DE TUPLAS EM ORDEM DESCRESCENTE
