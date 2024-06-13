@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from modules.controllers.training_model import TrainingModelController
 from schemas.schemas import TrainingModelInput
 from fastapi import APIRouter, Depends
+from modules.pln.sentiment import SentimentKMeansClassifier
 
 router = APIRouter()
 
@@ -25,3 +26,6 @@ def get_latest_training_model_with_lexico():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
+@router.get("/training", description="Rota para gerar um novo modelo de treinamento do Kmeans e Salvar o Lexico")
+def training():
+   return SentimentKMeansClassifier().update_training_model()
