@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Union
+from typing import Union, Optional
 
 
 class InputDoc(BaseModel):
@@ -23,6 +23,7 @@ class UsersInput(BaseModel):
     name:str
     senha:str
     email:str
+    userAdmin: Optional[bool] = False
 
 class ReviewInput(BaseModel):
     title: str
